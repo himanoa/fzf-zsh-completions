@@ -43,6 +43,8 @@ PREVIEW_OPTIONS
 
 _fzf_complete_git() {
     local last_options=${${(z)LBUFFER}[-2]}
+    local arguments=$@
+    local arguments_num=${#${(z)arguments}}
 
     if [[ "$@" =~ '^git (checkout|log|rebase|reset)' ]]; then
         _fzf_complete_git-commits '' "$@"
@@ -132,6 +134,19 @@ _fzf_complete_git() {
         return
     fi
 
+    if [[ ${(Q)arguments} = 'git pull'* ]]; then
+        # TODO: Use the number of removing options instead of $arguments_num
+        if [[ $arguments_num = 2 ]]; then
+            _fzf_complete_git-remotes '' $@
+            return
+        fi
+
+        if [[ $arguments_num = 3 ]]; then
+            exclude_refs=(refs/remotes) _fzf_complete_git-commits '' $@
+            return
+        fi
+    fi
+
     _fzf_path_completion "$prefix" "$@"
 }
 
@@ -139,8 +154,10 @@ _fzf_complete_git-commits() {
     local fzf_options="$1"
     shift
 
+    refs=(refs/heads refs/remotes refs/tags refs/stash)
+
     _fzf_complete "--ansi --tiebreak=index $fzf_options" "$@" < <({
-        git for-each-ref refs/heads refs/remotes refs/tags --format='%(refname:short) %(contents:subject)' 2> /dev/null
+        git for-each-ref ${only_refs-${refs:|exclude_refs}} --format='%(refname:short) %(contents:subject)' 2> /dev/null
         git log --format='%h %s' 2> /dev/null
     } | awk -v prefix="$prefix_option" '{ print prefix $0 }' | _fzf_complete_git_tabularize)
 }
@@ -215,6 +232,17 @@ _fzf_complete_git-unstaged-files_post() {
     for filename in ${(0)input}; do
         echo ${${(q+)filename:3}//\\n/\\\\n}
     done
+}
+
+_fzf_complete_git-remotes() {
+    local fzf_options="$1"
+    shift
+
+    _fzf_complete "--ansi $fzf_options" $@ < <(git remote --verbose | awk '/\(fetch\)$/ { gsub("\t", " "); print }' | _fzf_complete_git_tabularize)
+}
+
+_fzf_complete_git-remotes_post() {
+    awk '{ print $1 }'
 }
 
 _fzf_complete_git_tabularize() {
