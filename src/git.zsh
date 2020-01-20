@@ -159,22 +159,21 @@ _fzf_complete_git() {
         fi
 
         if [[ $arguments_num = 3 ]]; then
-            exclude_refs=(refs/remotes) _fzf_complete_git-commits '' $@
+            # TODO: Stop hard coding for $repository
+            repository=${${(Qz)arguments}[3]} _fzf_complete_git-refs '' $@
             return
         fi
     fi
 
-    _fzf_path_completion "$prefix" $@
+    _fzf_path_completion $prefix $@
 }
 
 _fzf_complete_git-commits() {
     local fzf_options=$1
     shift
 
-    refs=(refs/heads refs/remotes refs/tags refs/stash)
-
     _fzf_complete "--ansi --tiebreak=index $fzf_options" $@ < <({
-        git for-each-ref ${only_refs-${refs:|exclude_refs}} --format='%(refname:short) %(contents:subject)' 2> /dev/null
+        git for-each-ref refs/heads refs/remotes refs/tags --format='%(refname:short) %(contents:subject)' 2> /dev/null
         git log --format='%h %s' 2> /dev/null
     } | awk -v prefix=$prefix_option '{ print prefix $0 }' | _fzf_complete_git_tabularize)
 }
@@ -255,11 +254,38 @@ _fzf_complete_git-remotes() {
     local fzf_options="$1"
     shift
 
-    _fzf_complete "--ansi $fzf_options" $@ < <(git remote --verbose | awk '/\(fetch\)$/ { gsub("\t", " "); print }' | _fzf_complete_git_tabularize)
+    _fzf_complete "--ansi $fzf_options" $@ < <(git remote --verbose | awk '
+        /\(fetch\)$/ {
+            gsub("\t", " ")
+            print
+        }
+    ' | _fzf_complete_git_tabularize)
 }
 
 _fzf_complete_git-remotes_post() {
     awk '{ print $1 }'
+}
+
+_fzf_complete_git-refs() {
+    local fzf_options=$1
+    shift
+
+    local ref=${${$(git config remote.origin.fetch 2> /dev/null)#*:}%\*}
+
+    _fzf_complete "--ansi --tiebreak=index $fzf_options" $@ < <(
+        git for-each-ref $ref --format='%(refname:short) %(contents:subject)' 2> /dev/null |
+        awk -v prefix=$prefix_option '{ print prefix $0 }' | _fzf_complete_git_tabularize
+    )
+}
+
+_fzf_complete_git-refs_post() {
+    input=$(cat)
+
+    if [[ -z $input ]]; then
+        return
+    fi
+
+    echo ${${input#*/}%% *}
 }
 
 _fzf_complete_git_resolve_alias() {
