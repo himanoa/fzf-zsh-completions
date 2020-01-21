@@ -299,7 +299,7 @@ _fzf_complete_git() {
         fi
     fi
 
-    _fzf_path_completion $prefix $@
+    _fzf_path_completion "$prefix" $@
 }
 
 _fzf_complete_git-commits() {
