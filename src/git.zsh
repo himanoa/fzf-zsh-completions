@@ -73,25 +73,8 @@ _fzf_complete_git() {
     fi
 
     if [[ ${(Q)arguments} = 'git commit'* ]]; then
-        if [[ $prefix =~ '^--(fixup|reedit-message|reuse-message|squash)=' ]]; then
-            prefix_option=${prefix/=*/=} _fzf_complete_git-commits '' $@
-            return
-        fi
-
-        if [[ $last_argument =~ '^(-[^-]*[cC]|--(reuse-message|reedit-message|fixup|squash))$' ]]; then
-            _fzf_complete_git-commits '' $@
-            return
-        fi
-
-        if [[ $prefix =~ '^--message=' ]]; then
-            prefix_option=${prefix/=*/=} _fzf_complete_git-commit-messages '' $@
-            return
-        fi
-
-        if [[ $last_argument =~ '^(-[^-]*m|--message)$' ]]; then
-            _fzf_complete_git-commit-messages '' $@
-            return
-        fi
+        _fzf_complete-junction 'c C fixup reedit-message reuse-message squash' '_fzf_complete_git-commits' $@ && return
+        _fzf_complete-junction 'm message' '_fzf_complete_git-commit-messages' $@ && return
 
         if [[ $prefix =~ '^--author=' ]]; then
             return
@@ -151,6 +134,32 @@ _fzf_complete_git() {
     fi
 
     _fzf_path_completion "$prefix" $@
+}
+
+_fzf_complete-junction() {
+    local junction
+    local junctions=$1
+    local func=$2
+    local lbuf=$3
+
+    for junction in ${(z)junctions}; do
+        if [[ ${#junction} = 1 ]] && [[ $last_argument =~ "^-[^-]*$junction" ]]; then
+            "$func" '' $lbuf
+            return true
+        fi
+
+        if [[ $last_argument = "--$junction" ]]; then
+            "$func" '' $lbuf
+            return true
+        fi
+
+        if [[ $prefix =~ "^--$junction=" ]]; then
+            prefix_option=${prefix/=*/=} "$func" '' $lbuf
+            return true
+        fi
+    done
+
+    return false
 }
 
 _fzf_complete_git-commits() {
