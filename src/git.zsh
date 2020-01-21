@@ -62,6 +62,8 @@ _fzf_complete_git() {
     done
 
     local last_argument=${${(Qz)arguments}[-1]}
+    local cleanup_mode=(strip whitespace verbatim scissors default)
+    local untracked_file_mode=(no normal all)
 
     if [[ ${(Q)arguments} =~ '^git (checkout|log|rebase|reset)' ]]; then
         _fzf_complete_git-commits '' $@
@@ -120,7 +122,6 @@ _fzf_complete_git() {
             return
         fi
 
-        local cleanup_mode=(strip whitespace verbatim scissors default)
         if [[ $prefix =~ '^--cleanup=' ]]; then
             _fzf_complete '' $@ < <(awk -v prefix=${prefix/=*/=} '{ print prefix $0 }' <<< ${(F)cleanup_mode})
             return
@@ -131,7 +132,6 @@ _fzf_complete_git() {
             return
         fi
 
-        local untracked_file_mode=(no normal all)
         if [[ $prefix =~ '^--untracked-files=' ]]; then
             _fzf_complete '' $@ < <(awk -v prefix=${prefix/=*/=} '{ print prefix $0 }' <<< ${(F)untracked_file_mode})
             return
@@ -152,6 +152,140 @@ _fzf_complete_git() {
     fi
 
     if [[ ${(Q)arguments} = 'git pull'* ]]; then
+        if [[ $prefix =~ '^--recurse-submodules=' ]]; then
+            return
+        fi
+
+        if [[ $last_argument = '--recurse-submodules' ]]; then
+            return
+        fi
+
+        if [[ $prefix =~ '^--cleanup=' ]]; then
+            _fzf_complete '' $@ < <(awk -v prefix=${prefix/=*/=} '{ print prefix $0 }' <<< ${(F)cleanup_mode})
+            return
+        fi
+
+        if [[ $last_argument = '--cleanup' ]]; then
+            _fzf_complete '' $@ <<< ${(F)cleanup_mode}
+            return
+        fi
+
+        # if [[ $prefix =~ '^--gpg-sign=' ]]; then
+        #     prefix_option="${prefix/=*/=}" _fzf_complete_git-gpg-key '' $@
+        #     return
+        # fi
+        #
+        # if [[ $last_argument =~ '^(-[^-]*S|--gpg-sign)' ]]; then
+        #     _fzf_complete_git-gpg-key '' $@
+        #     return
+        # fi
+
+        if [[ $prefix =~ '^--log=' ]]; then
+            # <n>
+            return
+        fi
+
+        if [[ $last_argument = '--log' ]]; then
+            # <n>
+            return
+        fi
+
+        if [[ $prefix =~ '^--strategy=' ]]; then
+            # <strategy>
+            return
+        fi
+
+        if [[ $last_argument =~ '^(-[^-]*s|--strategy)' ]]; then
+            # <strategy>
+            return
+        fi
+
+        if [[ $prefix =~ '^--strategy-option=' ]]; then
+            # <option>
+            return
+        fi
+
+        if [[ $last_argument =~ '^(-[^-]*X|--strategy-option)' ]]; then
+            # <option>
+            return
+        fi
+
+        if [[ $prefix =~ '^--rebase=' ]]; then
+            return
+        fi
+
+        if [[ $last_argument = '--rebase' ]]; then
+            return
+        fi
+
+        if [[ $prefix =~ '^--depth=' ]]; then
+            # <depth>
+            return
+        fi
+
+        if [[ $last_argument = '--depth' ]]; then
+            # <depth>
+            return
+        fi
+
+        if [[ $prefix =~ '^--depthn=' ]]; then
+            # <depth>
+            return
+        fi
+
+        if [[ $last_argument = '--depthn' ]]; then
+            # <depth>
+            return
+        fi
+
+        if [[ $prefix =~ '^--shallow-since=' ]]; then
+            # <date>
+            return
+        fi
+
+        if [[ $last_argument = '--shallow-since' ]]; then
+            # <date>
+            return
+        fi
+
+        if [[ $prefix =~ '^--shallow-exclude=' ]]; then
+            # <revision>
+            return
+        fi
+
+        if [[ $last_argument = '--shallow-exclude' ]]; then
+            # <revision>
+            return
+        fi
+
+        if [[ $prefix =~ '^--negotiation-tip=' ]]; then
+            return
+        fi
+
+        if [[ $last_argument = '--negotiation-tip' ]]; then
+            return
+        fi
+
+        if [[ $prefix =~ '^--upload-pack=' ]]; then
+            # <upload-pack>
+            return
+        fi
+
+        if [[ $last_argument = '--upload-pack' ]]; then
+            # <upload-pack>
+            return
+        fi
+
+        if [[ $prefix =~ '^--server-option=' ]]; then
+            # <option>
+            return
+        fi
+
+        if [[ $last_argument =~ '^(-[^-]*o|--server-option)' ]]; then
+            # <option>
+            return
+        fi
+
         # TODO: Use the number of removing options instead of $arguments_num
         if [[ $arguments_num = 2 ]]; then
             _fzf_complete_git-remotes '' $@
