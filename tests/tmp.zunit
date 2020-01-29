@@ -1,0 +1,16 @@
+#!/usr/bin/env zunit
+
+@setup {
+    load ../fzf-zsh-completions.plugin.zsh
+
+    TEMP=$(echo $RANDOM)
+    touch $TEMP
+}
+
+@teardown {
+    rm -rf $TEMP
+}
+
+@test 'test' {
+    tmp
+}
