@@ -6,4 +6,5 @@ aaa() {
 
 tmp() {
     aaa
+    bbb
 }

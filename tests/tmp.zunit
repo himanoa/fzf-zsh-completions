@@ -12,5 +12,8 @@
 }
 
 @test 'test' {
+    bbb() {
+      assert $# equals 0
+    }
     tmp
 }
